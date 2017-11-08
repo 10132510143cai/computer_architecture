@@ -1,5 +1,3 @@
-package aida_opt;
-
 import java.io.*;
 import java.util.*;
 
@@ -374,7 +372,7 @@ public class MIPSsim
             outputcommand.add(output);
         }
         //数据解析完毕,输出到文件
-        File disassembly_file = new File("disassembly.txt");
+        File disassembly_file = new File("disassembly_stu.txt");
         if(!disassembly_file.exists()||!disassembly_file.isFile()){
             disassembly_file.createNewFile();
         }else{
@@ -400,7 +398,7 @@ public class MIPSsim
         int now_address = 256;
         int[] register = new int[32];
 
-        File simulation_file = new File("simulation.txt");
+        File simulation_file = new File("simulation_stu.txt");
         if(!simulation_file.exists()||!simulation_file.isFile()){
             simulation_file.createNewFile();
         }else{
