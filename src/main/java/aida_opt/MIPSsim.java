@@ -156,6 +156,9 @@ public class MIPSsim
             if (instruct.contains("\n")){
                 instruct = instruct.replace("\n","");
             }
+            if (instruct.contains("\r")){
+                instruct = instruct.replace("\r","");
+            }
         }
 
         address = address + 4;
@@ -288,14 +291,14 @@ public class MIPSsim
 
     public static void main( String[] args )throws Exception
     {
-        String line_break = "\r\n";
+        String line_break = "\n";
         // 读取操作系统切换换行符
         if(is_windows()){
-            line_break = "\n";
+            line_break = "\r\n";
         }
         //读取输入文件
         //String path = args[0];
-        String path = "C:\\Users\\JimGrey\\Desktop\\project1\\sample.txt";
+        String path = "sample.txt";
 
         List<String> inputcommand = getInputCommand(path);
 
