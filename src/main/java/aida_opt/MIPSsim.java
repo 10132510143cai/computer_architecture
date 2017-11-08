@@ -150,68 +150,142 @@ public class MIPSsim
      * @param instuctionmap 指令Hashmap
      * @return
      */
-    public static int execute_instrucion(int address, int[] register,
-                                  Map<String,String> instuctionmap){
-        String instruct = instuctionmap.get(Integer.toString(address));
-        String opocode = instruct.substring(0,instruct.indexOf("\t"));
-        instruct = instruct.substring(instruct.indexOf("\t"));
+    public static int execute_instrucion(int address, int[] register,List<String>dataList,int datastart,
+                                  Map<String,String> instuctionmap, boolean hasfinished){
+        String instruct ="BREAK";
+        if(instuctionmap.containsKey(Integer.toString(address))){
+            instruct = instuctionmap.get(Integer.toString(address));
+            if (instruct.contains("\n")){
+                instruct = instruct.replace("\n","");
+            }
+        }
+
+        address = address + 4;
+
+        String[] instructList = instruct.split(" ");
+        String opocode = instructList[0];
+
         if(opocode.equals("ADD")){
-            int rd = instruct.indexOf("R")+1;
-            int rs = instruct.indexOf("R", rd)+1;
-            int rt = instruct.indexOf("R", rs)+1;
+            int rd = Integer.parseInt(instructList[1].substring(1,instructList[1].length()-1));
+            int rs = Integer.parseInt(instructList[2].substring(1,instructList[2].length()-1));
+            int rt = Integer.parseInt(instructList[3].substring(1,instructList[3].length()));
             register[rd] = register[rs] + register[rt];
         }else if(opocode.equals("SUB")){
-            int rd = instruct.indexOf("R")+1;
-            int rs = instruct.indexOf("R", rd)+1;
-            int rt = instruct.indexOf("R", rs)+1;
+            int rd = Integer.parseInt(instructList[1].substring(1,instructList[1].length()-1));
+            int rs = Integer.parseInt(instructList[2].substring(1,instructList[2].length()-1));
+            int rt = Integer.parseInt(instructList[3].substring(1,instructList[3].length()));
             register[rd] = register[rs] - register[rt];
         }else if(opocode.equals("MUL")){
-            int rd = instruct.indexOf("R")+1;
-            int rs = instruct.indexOf("R", rd)+1;
-            int rt = instruct.indexOf("R", rs)+1;
+            int rd = Integer.parseInt(instructList[1].substring(1,instructList[1].length()-1));
+            int rs = Integer.parseInt(instructList[2].substring(1,instructList[2].length()-1));
+            int rt = Integer.parseInt(instructList[3].substring(1,instructList[3].length()));
             register[rd] = register[rs] * register[rt];
         }else if(opocode.equals("AND")){
-            int rd = instruct.indexOf("R")+1;
-            int rs = instruct.indexOf("R", rd)+1;
-            int rt = instruct.indexOf("R", rs)+1;
+            int rd = Integer.parseInt(instructList[1].substring(1,instructList[1].length()-1));
+            int rs = Integer.parseInt(instructList[2].substring(1,instructList[2].length()-1));
+            int rt = Integer.parseInt(instructList[3].substring(1,instructList[3].length()));
             register[rd] = register[rs] & register[rt];
         }else if(opocode.equals("OR")){
-            int rd = instruct.indexOf("R")+1;
-            int rs = instruct.indexOf("R", rd)+1;
-            int rt = instruct.indexOf("R", rs)+1;
+            int rd = Integer.parseInt(instructList[1].substring(1,instructList[1].length()-1));
+            int rs = Integer.parseInt(instructList[2].substring(1,instructList[2].length()-1));
+            int rt = Integer.parseInt(instructList[3].substring(1,instructList[3].length()));
             register[rd] = register[rs] | register[rt];
         }else if(opocode.equals("XOR")){
-            int rd = instruct.indexOf("R")+1;
-            int rs = instruct.indexOf("R", rd)+1;
-            int rt = instruct.indexOf("R", rs)+1;
+            int rd = Integer.parseInt(instructList[1].substring(1,instructList[1].length()-1));
+            int rs = Integer.parseInt(instructList[2].substring(1,instructList[2].length()-1));
+            int rt = Integer.parseInt(instructList[3].substring(1,instructList[3].length()));
             register[rd] = register[rs] ^ register[rt];
         }else if(opocode.equals("NOR")){
-            int rd = instruct.indexOf("R")+1;
-            int rs = instruct.indexOf("R", rd)+1;
-            int rt = instruct.indexOf("R", rs)+1;
+            int rd = Integer.parseInt(instructList[1].substring(1,instructList[1].length()-1));
+            int rs = Integer.parseInt(instructList[2].substring(1,instructList[2].length()-1));
+            int rt = Integer.parseInt(instructList[3].substring(1,instructList[3].length()));
             register[rd] = ~(register[rs] | register[rt]);
         }else if(opocode.equals("SLT")){
-            int rd = instruct.indexOf("R")+1;
-            int rs = instruct.indexOf("R", rd)+1;
-            int rt = instruct.indexOf("R", rs)+1;
+            int rd = Integer.parseInt(instructList[1].substring(1,instructList[1].length()-1));
+            int rs = Integer.parseInt(instructList[2].substring(1,instructList[2].length()-1));
+            int rt = Integer.parseInt(instructList[3].substring(1,instructList[3].length()));
             register[rd] = (register[rs]<register[rt])?1:0;
         }else if(opocode.equals("ADDI")){
-            int rt = instruct.indexOf("R")+1;
-            int rs = instruct.indexOf("R", rt)+1;
-            int immediate_num = instruct.indexOf("#")+1;
+            int rt = Integer.parseInt(instructList[1].substring(1,instructList[1].length()-1));
+            int rs = Integer.parseInt(instructList[2].substring(1,instructList[2].length()-1));
+            int immediate_num = Integer.parseInt(instructList[3].substring(1,instructList[3].length()));
             register[rt] = register[rs] + immediate_num;
         }else if(opocode.equals("ANDI")){
-            int rt = instruct.indexOf("R")+1;
-            int rs = instruct.indexOf("R", rt)+1;
-            int immediate_num = instruct.indexOf("#")+1;
+            int rt = Integer.parseInt(instructList[1].substring(1,instructList[1].length()-1));
+            int rs = Integer.parseInt(instructList[2].substring(1,instructList[2].length()-1));
+            int immediate_num = Integer.parseInt(instructList[3].substring(1,instructList[3].length()));
             register[rt] = register[rs] & immediate_num;
         }else if(opocode.equals("ORI")){
-            int rt = instruct.indexOf("R")+1;
-            int rs = instruct.indexOf("R", rt)+1;
-            int immediate_num = instruct.indexOf("#")+1;
+            int rt = Integer.parseInt(instructList[1].substring(1,instructList[1].length()-1));
+            int rs = Integer.parseInt(instructList[2].substring(1,instructList[2].length()-1));
+            int immediate_num = Integer.parseInt(instructList[3].substring(1,instructList[3].length()));
             register[rt] = register[rs] & immediate_num;
+        }else if(opocode.equals("XORI")){
+            int rt = Integer.parseInt(instructList[1].substring(1,instructList[1].length()-1));
+            int rs = Integer.parseInt(instructList[2].substring(1,instructList[2].length()-1));
+            int immediate_num = Integer.parseInt(instructList[3].substring(1,instructList[3].length()));
+            register[rt] = register[rs] ^ immediate_num;
+        }else if(opocode.equals("BEQ")){
+            int rs = Integer.parseInt(instructList[1].substring(1,instructList[1].length()-1));
+            int rt = Integer.parseInt(instructList[2].substring(1,instructList[2].length()-1));
+            int offset = Integer.parseInt(instructList[3].substring(1,instructList[3].length()));
+
+            if(register[rs]==register[rt]){
+                address = address + offset;
+            }
+        }else if(opocode.equals("BLTZ")){
+            int rs = Integer.parseInt(instructList[1].substring(1,instructList[1].length()-1));
+            int offset = Integer.parseInt(instructList[2].substring(1,instructList[2].length()));
+
+            if(register[rs]<0){
+                address = address + offset;
+            }
+        }else if(opocode.equals("BGTZ")){
+            int rs = Integer.parseInt(instructList[1].substring(1,instructList[1].length()-1));
+            int offset = Integer.parseInt(instructList[2].substring(1,instructList[2].length()));
+            if(register[rs]>0){
+                address = address + offset;
+            }
+        }else if(opocode.equals("J")){
+            int instr_index = Integer.parseInt(instructList[1].substring(1,instructList[1].length()));
+            address = instr_index;
+        }else if(opocode.equals("JR")){
+            int rs = Integer.parseInt(instructList[1].substring(1,instructList[1].length()));
+            address = register[rs];
+        }else if(opocode.equals("SW")){
+            int rt = Integer.parseInt(instructList[1].substring(1,instructList[1].length()-1));
+            int offset = Integer.parseInt(instructList[2].substring(0,instructList[2].indexOf("(")));
+            int base = Integer.parseInt(instructList[2].substring(instructList[2].indexOf("(")+2, instructList[2].indexOf(")")));
+            int list_index = (register[base] + offset - datastart)/4;
+            dataList.set(list_index, Integer.toString(register[rt]));
+        }else if(opocode.equals("LW")){
+            int rt = Integer.parseInt(instructList[1].substring(1,instructList[1].length()-1));
+            int offset = Integer.parseInt(instructList[2].substring(0,instructList[2].indexOf("(")));
+            int base = Integer.parseInt(instructList[2].substring(instructList[2].indexOf("(")+2, instructList[2].indexOf(")")));
+
+            int list_index = (register[base] + offset - datastart)/4;
+            String value = dataList.get(list_index);
+            register[rt] = Integer.parseInt(value);
+        }else if(opocode.equals("SLL")){
+            int rd = Integer.parseInt(instructList[1].substring(1,instructList[1].length()-1));
+            int rt = Integer.parseInt(instructList[2].substring(1,instructList[2].length()-1));
+            int sa = Integer.parseInt(instructList[3].substring(1,instructList[3].length()));
+            register[rd] = register[rt] <<sa;
+        }else if(opocode.equals("SRL")){
+            int rd = Integer.parseInt(instructList[1].substring(1,instructList[1].length()-1));
+            int rt = Integer.parseInt(instructList[2].substring(1,instructList[2].length()-1));
+            int sa = Integer.parseInt(instructList[3].substring(1,instructList[3].length()));
+            register[rd] = register[rt] >>>sa;
+        }else if(opocode.equals("SRA")){
+            int rd = Integer.parseInt(instructList[1].substring(1,instructList[1].length()-1));
+            int rt = Integer.parseInt(instructList[2].substring(1,instructList[2].length()-1));
+            int sa = Integer.parseInt(instructList[3].substring(1,instructList[3].length()));
+            register[rd] = register[rt] >>sa;
+        }else if(opocode.equals("BREAK")){
+            address = -1;
+            hasfinished = true;
         }
-        return address+4;
+        return address;
     }
 
     public static void main( String[] args )throws Exception
@@ -274,7 +348,7 @@ public class MIPSsim
                         String base = "R" + binaryToDec('0'+ command.substring(6,11));
                         String rt = "R" + binaryToDec('0'+ command.substring(11,16));
                         String offset = binaryToDec('0'+command.substring(16,32));
-                        output = instuction + " "+ rt +", "+offset+"("+base+")\n";
+                        output = instuction + " "+ rt +", "+offset+"("+base+")"+line_break;
                     }
                 }else{
                     //category2
@@ -327,23 +401,32 @@ public class MIPSsim
         int[] register = new int[32];
 
         File simulation_file = new File("simulation.txt");
+        if(!simulation_file.exists()||!simulation_file.isFile()){
+            simulation_file.createNewFile();
+        }else{
+            simulation_file.delete();
+            simulation_file.createNewFile();
+        }
+
         outScream = new BufferedWriter(new FileWriter(simulation_file));
         while(!hasfinished){
             cycle=cycle+1;
-            int new_now_address = execute_instrucion(now_address, register,
-                    instuctionmap);
-
+            int new_now_address = execute_instrucion(now_address, register,dataList,256+4*breakcycle,
+                    instuctionmap, hasfinished);
+            if(new_now_address<0){
+                hasfinished = true;
+            }
             //开始simulation_print
             for(int i=0; i<20;i++){
                 outScream.append('-');
             }
-            outScream.append('\n');
+            outScream.append(line_break);
 
             outScream.append("Cycle:"+cycle+"\t" +now_address+"\t"
                     +instuctionmap.get(Integer.toString(now_address).replaceAll(" ","\t")));
 
             outScream.append(line_break);
-            outScream.append("Registers\n");
+            outScream.append("Registers"+line_break);
             String register_info = "";
             for(int i=0; i<4; i++){
                 register_info = register_info + "R" + String.format("%02d", i*8) + ":";
@@ -355,12 +438,12 @@ public class MIPSsim
             outScream.append(register_info);
             outScream.append(line_break);
 
-            outScream.append("Data\n");
+            outScream.append("Data"+line_break);
             int print_address = 256 + breakcycle * 4;
             String data_info = "";
             for (int i=0; i<dataList.size();i++) {
                 if(i%8==0){
-                    data_info = data_info + print_address+":";
+                    data_info = data_info + (print_address + i*4)+":";
                 }
                 data_info = data_info + "\t" + dataList.get(i);
                 if(i%8==7){
@@ -369,6 +452,7 @@ public class MIPSsim
             }
             now_address = new_now_address;
             outScream.append(data_info);
+            outScream.append(line_break);
         }
         outScream.close();
     }
