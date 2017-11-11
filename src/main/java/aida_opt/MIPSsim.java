@@ -3,13 +3,12 @@ import java.util.*;
 
 /**
  * On my honor, I have neither given nor received unauthorized aid on this assignment.
- * 51174500002 蔡璟辉
+ * 51174500002
  */
 public class MIPSsim
 {
     /**
-     * 判断是否为windows操作系统
-     * @return
+     * @return whether it is windows operator system
      */
     public static boolean is_windows(){
         Properties props = System.getProperties();
@@ -20,9 +19,9 @@ public class MIPSsim
     }
 
     /**
-     * 获取输入文件
-     * @param path 文件路径
-     * @return 指令列表
+     * get input
+     * @param path path of file
+     * @return list of instruct
      * @throws Exception
      */
     public static List<String> getInputCommand(String path)throws Exception{
@@ -40,9 +39,9 @@ public class MIPSsim
     }
 
     /**
-     * 求二进制转十进制
-     * @param binary 二进制String串
-     * @return 十进制String串
+     * from binary to dec
+     * @param binary binary string
+     * @return dec string
      */
     public static String binaryToDec(String binary){
         boolean isnegative = false;
@@ -68,7 +67,14 @@ public class MIPSsim
             }
             binary=String.valueOf(c);
         }
-        String dec = Integer.toString(Integer.parseInt(binary,2));
+        String dec = "";
+        if(binary.equals("10000000000000000000000000000000")){
+            dec = Integer.toString(Integer.MIN_VALUE);
+            isnegative = false;
+        }else{
+            dec = Integer.toString(Integer.parseInt(binary,2));
+        }
+
         if(isnegative){
             dec = "-"+dec;
         }
@@ -76,9 +82,9 @@ public class MIPSsim
     }
 
     /**
-     * 解析指令形式
-     * @param isCategory1 是否是第一类指令
-     * @param identification_bits 指令码
+     * decode instrucation
+     * @param isCategory1
+     * @param identification_bits
      * @return
      */
     public static String getInstruction(boolean isCategory1, String identification_bits){
@@ -143,9 +149,9 @@ public class MIPSsim
 
     /**
      *
-     * @param address 当前指令地址
-     * @param register 寄存器目前的值
-     * @param instuctionmap 指令Hashmap
+     * @param address
+     * @param register
+     * @param instuctionmap instruction Hashmap
      * @return
      */
     public static int execute_instrucion(int address, int[] register,List<String>dataList,int datastart,
@@ -292,17 +298,17 @@ public class MIPSsim
     public static void main( String[] args )throws Exception
     {
         String line_break = "\n";
-        // 读取操作系统切换换行符
+
         if(is_windows()){
             line_break = "\r\n";
         }
-        //读取输入文件
+
         //String path = args[0];
         String path = "sample.txt";
 
         List<String> inputcommand = getInputCommand(path);
 
-        //解析数据
+
         List<String> outputcommand = new LinkedList<String>();
         List<String> dataList = new LinkedList<String>();
         boolean hasbreak = false;
@@ -374,7 +380,7 @@ public class MIPSsim
             }
             outputcommand.add(output);
         }
-        //数据解析完毕,输出到文件
+
         File disassembly_file = new File("disassembly_stu.txt");
         if(!disassembly_file.exists()||!disassembly_file.isFile()){
             disassembly_file.createNewFile();
@@ -417,7 +423,7 @@ public class MIPSsim
             if(new_now_address<0){
                 hasfinished = true;
             }
-            //开始simulation_print
+
             for(int i=0; i<20;i++){
                 outScream.append('-');
             }
