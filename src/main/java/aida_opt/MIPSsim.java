@@ -311,7 +311,7 @@ public class MIPSsim {
     }
 
     public static int excutePipeline(int address, int[] register, List<String> dataList, int breakcycle,
-                                     Map<String, String> instuctionmap, boolean hasfinished, int[] IF_Unit,
+                                     Map<String, String> instuctionmap, boolean[] hasfinished, int[] IF_Unit,
                                      Map<String, List<Integer>> Queue_Map, int pipelineaddress,
                                      boolean issuehasfinished, int[] registerinuse) {
         //checkreadorwrite(Queue_Map, registerinuse);
@@ -328,7 +328,7 @@ public class MIPSsim {
             }
         } else if (IF_Unit[1] != 0) {
             pipelineaddress = execute_instrucion(IF_Unit[1], register, dataList, 256 + 4 * breakcycle,
-                    instuctionmap, hasfinished);
+                    instuctionmap, hasfinished[0]);
             IF_Unit[1] = 0;
         }
 
@@ -339,7 +339,7 @@ public class MIPSsim {
             boolean firstisbranch = false;
             for (int i = 0; i < 2 && !firstisbranch; i++) {
                 if (IF_Unit[0] == 0) {
-                    if (newPre_Issue_Queue.size() < 4 && !hasfinished) {
+                    if (newPre_Issue_Queue.size() < 4 && !hasfinished[0]) {
                         String[] instructList = getinstructList(instuctionmap, pipelineaddress);
                         String opocode = instructList[0];
                         int newpipineaddress = pipelineaddress;
@@ -351,10 +351,12 @@ public class MIPSsim {
                             int tempaddress[] = {newpipineaddress};
                             if (optionisready(registerinuse, register, tempaddress, instuctionmap)) {
                                 IF_Unit[1] = newpipineaddress;
-                                //pipelineaddress = tempaddress[0];
 
                             } else {
                                 IF_Unit[0] = newpipineaddress;
+                            }
+                            if(opocode.equals("BREAK")){
+                                hasfinished[0] = true;
                             }
                         } else {
                             newPre_Issue_Queue.add(newpipineaddress);
@@ -546,10 +548,10 @@ public class MIPSsim {
             int pre_men_queuenum = Pre_Mem_Queue.get(0);
             String[] Pre_Mem_QueueinstructList = getinstructList(instuctionmap, pre_men_queuenum);
             int new_now_address = execute_instrucion(Pre_Mem_Queue.get(0), register, dataList, 256 + 4 * breakcycle,
-                    instuctionmap, hasfinished);
+                    instuctionmap, hasfinished[0]);
 
             if (new_now_address < 0) {
-                hasfinished = true;
+                hasfinished[0] = true;
             }
 
             String pre_opocode = Pre_Mem_QueueinstructList[0];
@@ -578,7 +580,7 @@ public class MIPSsim {
             String opocode = instructList[0];
 
             int new_now_address = execute_instrucion(Pre_ALU2_Queue.get(0), register, dataList, 256 + 4 * breakcycle,
-                    instuctionmap, hasfinished);
+                    instuctionmap, hasfinished[0]);
 
             newPost_ALU2_Queue.add(0, Pre_ALU2_Queue.get(0));
             newPre_ALU2_Queue.remove(0);
@@ -875,7 +877,7 @@ public class MIPSsim {
             Queue_Map.put("Pre_ALU2_Queue", Pre_ALU2_Queue);
             Queue_Map.put("Post_ALU2_Queue", Post_ALU2_Queue);
 
-            File simulation_file = new File("simulation1_stu.txt");
+            File simulation_file = new File("simulation_stu.txt");
             if (!simulation_file.exists() || !simulation_file.isFile()) {
                 simulation_file.createNewFile();
             } else {
@@ -886,10 +888,11 @@ public class MIPSsim {
             outScream = new BufferedWriter(new FileWriter(simulation_file));
 
             int pipelineaddress = now_address;
-            while (!hasfinished) {
+            boolean[] haspipelineover = {false};
+            while (!haspipelineover[0]) {
                 cycle = cycle + 1;
                 pipelineaddress = excutePipeline(now_address, register, dataList, breakcycle,
-                        instuctionmap, hasfinished, IF_Unit, Queue_Map, pipelineaddress, fetchhasfinished, registerinuse);
+                        instuctionmap, haspipelineover, IF_Unit, Queue_Map, pipelineaddress, fetchhasfinished, registerinuse);
 
                 for (int i = 0; i < 20; i++) {
                     outScream.append('-');
@@ -970,20 +973,8 @@ public class MIPSsim {
                 newregister = register.clone();
                 newdataList.clear();
                 RenewList(newdataList, dataList);
-
-                outScream.close();
-
-                simulation_file = new File("simulation" + (cycle + 1) + "_stu.txt");
-                if (!simulation_file.exists() || !simulation_file.isFile()) {
-                    simulation_file.createNewFile();
-                } else {
-                    simulation_file.delete();
-                    simulation_file.createNewFile();
-                }
-
-                outScream = new BufferedWriter(new FileWriter(simulation_file));
             }
-
+            outScream.close();
         }
     }
 }
