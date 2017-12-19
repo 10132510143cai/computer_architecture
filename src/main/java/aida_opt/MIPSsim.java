@@ -314,7 +314,6 @@ public class MIPSsim {
                                      Map<String, String> instuctionmap, boolean[] hasfinished, int[] IF_Unit,
                                      Map<String, List<Integer>> Queue_Map, int pipelineaddress,
                                      boolean issuehasfinished, int[] registerinuse) {
-        //checkreadorwrite(Queue_Map, registerinuse);
         boolean[] tempregisterneedread = new boolean[32];
 
         // IF UNIT
@@ -413,14 +412,6 @@ public class MIPSsim {
                                 }
                                 tempregisterneedread[base] = true;
                             }
-                            /*int rd = Integer.parseInt(instructList[1].substring(1, instructList[1].length() - 1));
-                            if (registerinuse[rd] == 0) {
-                                registerinuse[rd] = newpipineaddress;
-                            }*/
-                        }
-
-                        if (opocode.equals("BREAK")) {
-                            issuehasfinished = true;
                         }
                     }
                 }
@@ -455,7 +446,7 @@ public class MIPSsim {
                     registerinuse[rd] = issueaddress;
                 }
 
-                if (registerinuse[rd] == issueaddress && registerinuse[rs] == 0 && registerinuse[rt] == 0 && cannonloadstore &&
+                if (registerinuse[rd] == issueaddress && (registerinuse[rs] == 0||registerinuse[rs] == issueaddress) && (registerinuse[rt] == 0||registerinuse[rs] == issueaddress) && cannonloadstore &&
                         newPre_ALU2_Queue.size() < 2) {
                     int al2_size = newPre_ALU2_Queue.size();
                     newPre_ALU2_Queue.add(al2_size, issueaddress);
@@ -905,22 +896,22 @@ public class MIPSsim {
                 outScream.append("IF Unit:" + line_break);
                 outScream.append("\tWaiting Instruction:");
                 if (IF_Unit[0] > 0) {
-                    outScream.append(" [" + instuctionmap.get(Integer.toString(IF_Unit[0])).replaceAll(" ", "\t").replaceAll(line_break, "") + " ]");
+                    outScream.append(" [" + instuctionmap.get(Integer.toString(IF_Unit[0])).replaceAll(line_break, "") + "]");
                 }
                 outScream.append(line_break);
 
                 outScream.append("\tExecuted Instruction:");
                 if (IF_Unit[1] > 0) {
-                    outScream.append(" [" + instuctionmap.get(Integer.toString(IF_Unit[1])).replaceAll(" ", "\t").replaceAll(line_break, "") + " ]");
+                    outScream.append(" [" + instuctionmap.get(Integer.toString(IF_Unit[1])).replaceAll(line_break, "") + "]");
                 }
                 outScream.append(line_break);
 
                 outScream.append("Pre-Issue Queue:");
                 outScream.append(line_break);
                 for (int i = 0; i < 4; i++) {
-                    outScream.append("\tEntry " + i + ": ");
+                    outScream.append("\tEntry " + i + ":");
                     if (i < Queue_Map.get("Pre_Issue_Queue").size()) {
-                        outScream.append(" [" + instuctionmap.get(Integer.toString(Queue_Map.get("Pre_Issue_Queue").get(i))).replaceAll(" ", "\t").replaceAll(line_break, "") + " ]");
+                        outScream.append(" [" + instuctionmap.get(Integer.toString(Queue_Map.get("Pre_Issue_Queue").get(i))).replaceAll(line_break, "") + "]");
                     }
                     outScream.append(line_break);
                 }
@@ -928,16 +919,16 @@ public class MIPSsim {
                 outScream.append("Pre-ALU1 Queue:");
                 outScream.append(line_break);
                 for (int i = 0; i < 2; i++) {
-                    outScream.append("\tEntry " + i + ": ");
+                    outScream.append("\tEntry " + i + ":");
                     if (i < Queue_Map.get("Pre_ALU1_Queue").size()) {
-                        outScream.append(" [" + instuctionmap.get(Integer.toString(Queue_Map.get("Pre_ALU1_Queue").get(i))).replaceAll(" ", "\t").replaceAll(line_break, "") + " ]");
+                        outScream.append(" [" + instuctionmap.get(Integer.toString(Queue_Map.get("Pre_ALU1_Queue").get(i))).replaceAll(line_break, "") + "]");
                     }
                     outScream.append(line_break);
                 }
                 outScream.append("Pre-MEM Queue:");
                 for (int i = 0; i < 1; i++) {
                     if (i < Queue_Map.get("Pre_Mem_Queue").size()) {
-                        outScream.append(" [" + instuctionmap.get(Integer.toString(Queue_Map.get("Pre_Mem_Queue").get(i))).replaceAll(" ", "\t").replaceAll(line_break, "") + " ]");
+                        outScream.append(" [" + instuctionmap.get(Integer.toString(Queue_Map.get("Pre_Mem_Queue").get(i))).replaceAll(line_break, "") + "]");
                     }
                     outScream.append(line_break);
                 }
@@ -945,7 +936,7 @@ public class MIPSsim {
                 outScream.append("Post-MEM Queue:");
                 for (int i = 0; i < 1; i++) {
                     if (i < Queue_Map.get("Post_Mem_Queue").size()) {
-                        outScream.append(" [" + instuctionmap.get(Integer.toString(Queue_Map.get("Post_Mem_Queue").get(i))).replaceAll(" ", "\t").replaceAll(line_break, "") + " ]");
+                        outScream.append(" [" + instuctionmap.get(Integer.toString(Queue_Map.get("Post_Mem_Queue").get(i))).replaceAll(line_break, "") + "]");
                     }
                     outScream.append(line_break);
                 }
@@ -953,9 +944,9 @@ public class MIPSsim {
                 outScream.append("Pre-ALU2 Queue:");
                 outScream.append(line_break);
                 for (int i = 0; i < 2; i++) {
-                    outScream.append("\tEntry " + i + ": ");
+                    outScream.append("\tEntry " + i + ":");
                     if (i < Queue_Map.get("Pre_ALU2_Queue").size()) {
-                        outScream.append(" [" + instuctionmap.get(Integer.toString(Queue_Map.get("Pre_ALU2_Queue").get(i))).replaceAll(" ", "\t").replaceAll(line_break, "") + " ]");
+                        outScream.append(" [" + instuctionmap.get(Integer.toString(Queue_Map.get("Pre_ALU2_Queue").get(i))).replaceAll(line_break, "") + "]");
                     }
                     outScream.append(line_break);
                 }
@@ -963,7 +954,7 @@ public class MIPSsim {
                 outScream.append("Post-ALU2 Queue:");
                 for (int i = 0; i < 1; i++) {
                     if (i < Queue_Map.get("Post_ALU2_Queue").size()) {
-                        outScream.append(" [" + instuctionmap.get(Integer.toString(Queue_Map.get("Post_ALU2_Queue").get(i))).replaceAll(" ", "\t").replaceAll(line_break, "") + " ]");
+                        outScream.append(" [" + instuctionmap.get(Integer.toString(Queue_Map.get("Post_ALU2_Queue").get(i))).replaceAll(line_break, "") + "]");
                     }
                     outScream.append(line_break);
                 }
