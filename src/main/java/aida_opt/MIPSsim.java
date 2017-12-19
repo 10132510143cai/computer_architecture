@@ -304,11 +304,19 @@ public class MIPSsim {
         }
     }
 
+    public static void RenewList(List<String> newPre_Issue_Queue, List<String> oldPre_Issue) {
+        for (int i = 0; i < oldPre_Issue.size(); i++) {
+            newPre_Issue_Queue.add(i, oldPre_Issue.get(i));
+        }
+    }
+
     public static int excutePipeline(int address, int[] register, List<String> dataList, int breakcycle,
                                      Map<String, String> instuctionmap, boolean hasfinished, int[] IF_Unit,
                                      Map<String, List<Integer>> Queue_Map, int pipelineaddress,
                                      boolean issuehasfinished, int[] registerinuse) {
         //checkreadorwrite(Queue_Map, registerinuse);
+        boolean[] tempregisterneedread = new boolean[32];
+
         // IF UNIT
         boolean shouldwait = false;
         if (IF_Unit[0] != 0) {
@@ -317,9 +325,10 @@ public class MIPSsim {
             if (optionisready(registerinuse, register, tempIF_Unit, instuctionmap)) {
                 IF_Unit[1] = IF_Unit[0];
                 IF_Unit[0] = 0;
-                pipelineaddress = IF_Unit[1];
             }
         } else if (IF_Unit[1] != 0) {
+            pipelineaddress = execute_instrucion(IF_Unit[1], register, dataList, 256 + 4 * breakcycle,
+                    instuctionmap, hasfinished);
             IF_Unit[1] = 0;
         }
 
@@ -342,16 +351,70 @@ public class MIPSsim {
                             int tempaddress[] = {newpipineaddress};
                             if (optionisready(registerinuse, register, tempaddress, instuctionmap)) {
                                 IF_Unit[1] = newpipineaddress;
-                                pipelineaddress = tempaddress[0];
+                                //pipelineaddress = tempaddress[0];
+
                             } else {
                                 IF_Unit[0] = newpipineaddress;
                             }
                         } else {
                             newPre_Issue_Queue.add(newpipineaddress);
-                            int rd = Integer.parseInt(instructList[1].substring(1, instructList[1].length() - 1));
+                            for(int j=0;j<newPre_Issue_Queue.size();j++){
+                                String[] tempinstructList = getinstructList(instuctionmap, newPre_Issue_Queue.get(j));
+                                String tempopocode = tempinstructList[0];
+                                if (tempopocode.equals("ADD") || tempopocode.equals("SUB") || tempopocode.equals("MUL") || tempopocode.equals("AND") ||
+                                        tempopocode.equals("OR") || tempopocode.equals("XOR") || tempopocode.equals("NOR") || tempopocode.equals("SLT")) {
+                                    int rd = Integer.parseInt(tempinstructList[1].substring(1, tempinstructList[1].length() - 1));
+                                    int rs = Integer.parseInt(tempinstructList[2].substring(1, tempinstructList[2].length() - 1));
+                                    int rt = Integer.parseInt(tempinstructList[3].substring(1, tempinstructList[3].length()));
+
+                                    tempregisterneedread[rt] = true;
+                                    tempregisterneedread[rs] = true;
+                                }else if (tempopocode.equals("SLL") || tempopocode.equals("SRA") || tempopocode.equals("SRL")) {
+                                    int rd = Integer.parseInt(tempinstructList[1].substring(1, tempinstructList[1].length() - 1));
+                                    int rt = Integer.parseInt(tempinstructList[2].substring(1, tempinstructList[2].length() - 1));
+
+                                    tempregisterneedread[rt] = true;
+                                }else if (tempopocode.equals("LW") || tempopocode.equals("SW")) {
+                                    int rt = Integer.parseInt(tempinstructList[1].substring(1, tempinstructList[1].length() - 1));
+                                    int offset = Integer.parseInt(tempinstructList[2].substring(0, tempinstructList[2].indexOf("(")));
+                                    int base = Integer.parseInt(tempinstructList[2].substring(tempinstructList[2].indexOf("(") + 2, tempinstructList[2].indexOf(")")));
+
+                                    tempregisterneedread[base] = true;
+                                }
+                            }
+
+                            if (opocode.equals("ADD") || opocode.equals("SUB") || opocode.equals("MUL") || opocode.equals("AND") ||
+                                    opocode.equals("OR") || opocode.equals("XOR") || opocode.equals("NOR") || opocode.equals("SLT")) {
+                                int rd = Integer.parseInt(instructList[1].substring(1, instructList[1].length() - 1));
+                                int rs = Integer.parseInt(instructList[2].substring(1, instructList[2].length() - 1));
+                                int rt = Integer.parseInt(instructList[3].substring(1, instructList[3].length()));
+                                if (registerinuse[rd] == 0 && !tempregisterneedread[rd]) {
+                                    registerinuse[rd] = newpipineaddress;
+                                }
+                                tempregisterneedread[rt] = true;
+                                tempregisterneedread[rs] = true;
+                            }else if (opocode.equals("SLL") || opocode.equals("SRA") || opocode.equals("SRL")) {
+                                int rd = Integer.parseInt(instructList[1].substring(1, instructList[1].length() - 1));
+                                int rt = Integer.parseInt(instructList[2].substring(1, instructList[2].length() - 1));
+
+                                if (registerinuse[rd] == 0 && !tempregisterneedread[rd]) {
+                                    registerinuse[rd] = newpipineaddress;
+                                }
+                                tempregisterneedread[rt] = true;
+                            }else if (opocode.equals("LW") || opocode.equals("SW")) {
+                                int rt = Integer.parseInt(instructList[1].substring(1, instructList[1].length() - 1));
+                                int offset = Integer.parseInt(instructList[2].substring(0, instructList[2].indexOf("(")));
+                                int base = Integer.parseInt(instructList[2].substring(instructList[2].indexOf("(") + 2, instructList[2].indexOf(")")));
+
+                                if (registerinuse[rt] == 0 && !tempregisterneedread[rt]) {
+                                    registerinuse[rt] = newpipineaddress;
+                                }
+                                tempregisterneedread[base] = true;
+                            }
+                            /*int rd = Integer.parseInt(instructList[1].substring(1, instructList[1].length() - 1));
                             if (registerinuse[rd] == 0) {
                                 registerinuse[rd] = newpipineaddress;
-                            }
+                            }*/
                         }
 
                         if (opocode.equals("BREAK")) {
@@ -375,6 +438,7 @@ public class MIPSsim {
         RenewQueue(newPre_ALU1_Queue, Queue_Map.get("Pre_ALU1_Queue"));
         RenewQueue(newPre_ALU2_Queue, Queue_Map.get("Pre_ALU2_Queue"));
 
+        boolean hasstorebefore = false;
         for (int i = 0; i < Pre_Issue_Queue.size(); i++) {
             int issueaddress = Pre_Issue_Queue.get(i);
             String[] instructList = getinstructList(instuctionmap, issueaddress);
@@ -408,12 +472,16 @@ public class MIPSsim {
                     registerinuse[rt] = issueaddress;
                 }
 
-                if (registerinuse[rt] == issueaddress && registerinuse[base] == 0 && canloadstore && newPre_ALU1_Queue.size() < 2) {
+                if (registerinuse[rt] == issueaddress && (registerinuse[base] == 0||registerinuse[base] == issueaddress) && canloadstore && newPre_ALU1_Queue.size() < 2 && !registerneedread[rt] &&!hasstorebefore) {
                     int al1_size = newPre_ALU1_Queue.size();
                     newPre_ALU1_Queue.add(al1_size, issueaddress);
                     newPre_Issue_Queue.remove(i);
                     canloadstore = false;
                 }
+
+                if(opocode.equals("SW"))
+                    hasstorebefore = true;
+
                 registerneedread[base] = true;
             } else if (opocode.equals("SLL") || opocode.equals("SRA") || opocode.equals("SRL")) {
                 int rd = Integer.parseInt(instructList[1].substring(1, instructList[1].length() - 1));
@@ -422,8 +490,8 @@ public class MIPSsim {
                 if (registerinuse[rd] == 0 && !registerneedread[rd]) {
                     registerinuse[rd] = issueaddress;
                 }
-                if (registerinuse[rd] == issueaddress && registerinuse[rt] == 0 && cannonloadstore &&
-                        newPre_ALU2_Queue.size() < 2) {
+                if (registerinuse[rd] == issueaddress && (registerinuse[rt] == 0|| registerinuse[rt] == issueaddress)&& cannonloadstore &&
+                        newPre_ALU2_Queue.size() < 2 && !registerneedread[rd]) {
                     int al2_size = newPre_ALU2_Queue.size();
                     newPre_ALU2_Queue.add(al2_size, issueaddress);
                     newPre_Issue_Queue.remove(i);
@@ -437,7 +505,7 @@ public class MIPSsim {
                     registerinuse[rt] = issueaddress;
                 }
 
-                if(registerinuse[rt] == issueaddress && registerinuse[rs]==0 && cannonloadstore && newPre_ALU2_Queue.size()<2){
+                if(registerinuse[rt] == issueaddress && (registerinuse[rs]==0||registerinuse[rs]==issueaddress)&& cannonloadstore && newPre_ALU2_Queue.size()<2){
                     int al2_size = newPre_ALU2_Queue.size();
                     newPre_ALU2_Queue.add(al2_size, issueaddress);
                     newPre_Issue_Queue.remove(i);
@@ -491,6 +559,8 @@ public class MIPSsim {
                 Queue_Map.get("Pre_Mem_Queue").remove(0);
             } else {
                 Queue_Map.get("Pre_Mem_Queue").remove(0);
+                int rt = Integer.parseInt(Pre_Mem_QueueinstructList[1].substring(1, Pre_Mem_QueueinstructList[1].length() - 1));
+                registerinuse[rt] = 0;
             }
         }
         //pre-alu2->post-alu2
@@ -786,8 +856,10 @@ public class MIPSsim {
             boolean fetchhasfinished = false;
             int now_address = 256;
             int[] register = new int[32];
+            int[] newregister = new int[32];
             int[] registerinuse = new int[32];
-
+            List<String> newdataList = new LinkedList<String>();
+            RenewList(newdataList, dataList);
             int[] IF_Unit = {0, 0};
             List<Integer> Pre_Issue_Queue = new LinkedList<Integer>();
             List<Integer> Pre_ALU1_Queue = new LinkedList<Integer>();
@@ -816,7 +888,6 @@ public class MIPSsim {
             int pipelineaddress = now_address;
             while (!hasfinished) {
                 cycle = cycle + 1;
-
                 pipelineaddress = excutePipeline(now_address, register, dataList, breakcycle,
                         instuctionmap, hasfinished, IF_Unit, Queue_Map, pipelineaddress, fetchhasfinished, registerinuse);
 
@@ -895,7 +966,10 @@ public class MIPSsim {
                 }
                 outScream.append(line_break);
 
-                printRegisterandData(outScream, line_break, register, breakcycle, dataList);
+                printRegisterandData(outScream, line_break, newregister, breakcycle, newdataList);
+                newregister = register.clone();
+                newdataList.clear();
+                RenewList(newdataList, dataList);
 
                 outScream.close();
 
